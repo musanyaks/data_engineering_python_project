@@ -1,0 +1,17 @@
+FROM apache/spark:3.5.0
+
+USER root
+
+RUN pip install --no-cache-dir pandas psycopg2-binary snowflake-connector-python pydantic pyyaml tenacity
+
+RUN mkdir -p /app/src /app/spark/jobs /app/data
+
+COPY src/ /app/src/
+COPY spark/jobs/ /app/spark/jobs/
+COPY spark/config/ /app/spark/config/
+
+ENV PYTHONPATH=/app/src:/app/spark/jobs
+ENV SPARK_HOME=/opt/spark
+ENV PYSPARK_PYTHON=python3
+
+USER 185

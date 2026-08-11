@@ -1,0 +1,53 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ target.database }}"
+    schema: raw
+    tables:
+      - name: sales
+        description: "Raw sales transactions from POS system"
+        columns:
+          - name: sale_id
+            description: "Unique sale identifier"
+            tests:
+              - unique
+              - not_null
+          - name: product_id
+            description: "Product identifier"
+          - name: customer_id
+            description: "Customer identifier"
+          - name: sale_date
+            description: "Date of sale"
+          - name: quantity
+            description: "Quantity sold"
+          - name: unit_price
+            description: "Price per unit"
+          - name: total_amount
+            description: "Total sale amount"
+
+      - name: customers
+        description: "Raw customer data from CRM"
+        columns:
+          - name: customer_id
+            description: "Unique customer identifier"
+            tests:
+              - unique
+              - not_null
+          - name: first_name
+          - name: last_name
+          - name: email
+          - name: registration_date
+          - name: country
+
+      - name: products
+        description: "Raw product catalog"
+        columns:
+          - name: product_id
+            tests:
+              - unique
+              - not_null
+          - name: product_name
+          - name: category
+          - name: cost_price
+          - name: retail_price

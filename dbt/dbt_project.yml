@@ -1,0 +1,51 @@
+name: 'analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'snowflake_prod'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  analytics:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ["staging"]
+    intermediate:
+      +materialized: ephemeral
+      +schema: intermediate
+      +tags: ["intermediate"]
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ["marts"]
+      +snowflake_warehouse: "COMPUTE_WH"
+      core:
+        +tags: ["core"]
+      finance:
+        +tags: ["finance"]
+
+seeds:
+  analytics:
+    +schema: seeds
+    +tags: ["seeds"]
+
+snapshots:
+  analytics:
+    +target_schema: snapshots
+    +tags: ["snapshots"]
+
+tests:
+  analytics:
+    +severity: warn

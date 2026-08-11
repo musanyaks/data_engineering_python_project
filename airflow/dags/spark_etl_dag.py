@@ -60,6 +60,7 @@ with DAG(**config) as dag:
     # Task 3: Submit Spark job to replicate Snowflake data
     replicate_sf = SparkSubmitOperator(
         task_id="replicate_snowflake",
+    packages="net.snowflake:spark-snowflake_2.12:2.16.0-spark_3.4,net.snowflake:snowflake-jdbc:3.20.0,org.postgresql:postgresql:42.7.3",
         application="/app/spark/jobs/snowflake_to_postgres.py",
         conn_id="spark_default",
         conf={

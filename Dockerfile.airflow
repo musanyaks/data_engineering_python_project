@@ -3,16 +3,39 @@ FROM apache/airflow:2.8.1-python3.11
 USER root
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends     gcc     libpq-dev     git     && rm -rf /var/lib/apt/lists/*
-
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    git \
+    default-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
 USER airflow
 
 # Install Python packages
 COPY pyproject.toml .
-RUN pip install --no-cache-dir --upgrade pip &&     pip install --no-cache-dir     apache-airflow-providers-celery     apache-airflow-providers-postgres     apache-airflow-providers-http     snowflake-connector-python     snowflake-sqlalchemy     dbt-core     dbt-snowflake     pandas     pydantic     pydantic-settings     structlog     tenacity     httpx
+RUN pip install --no-cache-dir --upgrade "pip<25" && \
+    pip install --no-cache-dir \
+        apache-airflow-providers-celery \
+        apache-airflow-providers-postgres \
+        apache-airflow-providers-http \
+        "apache-airflow-providers-apache-spark==4.1.3" \
+        "pyspark==3.5.0" \
+        "snowflake-connector-python==3.6.0" \
+        "snowflake-sqlalchemy==1.5.1" \
+        "dbt-core==1.7.13" \
+        "dbt-snowflake==1.7.1" \
+        pandas \
+        pydantic \
+        pydantic-settings \
+        structlog \
+        tenacity \
+        httpx \
+        python-json-logger
 
 # Copy application code
 COPY --chown=airflow:root src/ /app/src/
 COPY --chown=airflow:root dbt/ /app/dbt/
 
 ENV PYTHONPATH=/app/src
+ENV JAVA_HOME=/usr/lib/jvm/default-java

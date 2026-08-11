@@ -52,7 +52,7 @@ with DAG(
         """Extract data from CSV files."""
         pipeline = (
             ETLPipeline("csv_extraction")
-            .extract(CSVExtractor("sales", "/data/incoming/sales.csv"))
+            .extract(CSVExtractor("sales", "/app/data/incoming/sales.csv"))
             .transform(CleaningTransformer("clean"))
             .load(PostgresLoader("staging", table_name="staging_sales"))
         )
@@ -71,14 +71,18 @@ with DAG(
         extractor = SnowflakeExtractor(
             name="sf_events",
             query="""
-                SELECT 
+                SELECT
                     event_id,
                     user_id,
                     event_type,
-                    timestamp,
-                    properties
-                FROM raw_events
-                WHERE timestamp >= DATEADD(hour, -1, CURRENT_TIMESTAMP())
+                    event_timestamp,
+                    session_id,
+                    page_url,
+                    device_type,
+                    country,
+                    amount
+                FROM analytics.raw.kafka_events
+                WHERE event_timestamp >= DATEADD(hour, -1, CURRENT_TIMESTAMP())
             """,
         )
         df = extractor.extract()

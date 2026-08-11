@@ -26,7 +26,7 @@ def main() -> int:
         logger.info("Reading from Snowflake")
         extractor = SparkSnowflakeExtractor(
             "sf",
-            query="SELECT * FROM raw_events LIMIT 10000",
+            query="SELECT * FROM analytics.raw.kafka_events LIMIT 10000",
         )
         df = extractor.extract()
 

@@ -95,8 +95,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.airflow
+    command: webserver
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: '8fd8f68bd1ba5ee8e90c0fba740a4d13'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -120,8 +122,9 @@ services:
       - ./src:/app/src
       - ./dbt:/app/dbt
       - ./data:/app/data
+      - ./spark/jobs:/app/spark/jobs
     ports:
-      - "8080:8080"
+      - "8090:8080"
     deploy:
       resources:
         limits:
@@ -147,6 +150,7 @@ services:
     command: scheduler
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: '8fd8f68bd1ba5ee8e90c0fba740a4d13'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -168,6 +172,7 @@ services:
       - ./src:/app/src
       - ./dbt:/app/dbt
       - ./data:/app/data
+      - ./spark/jobs:/app/spark/jobs
     deploy:
       resources:
         limits:
@@ -193,6 +198,7 @@ services:
     command: celery worker
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: '8fd8f68bd1ba5ee8e90c0fba740a4d13'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -214,6 +220,7 @@ services:
       - ./src:/app/src
       - ./dbt:/app/dbt
       - ./data:/app/data
+      - ./spark/jobs:/app/spark/jobs
     deploy:
       resources:
         limits:
@@ -233,6 +240,7 @@ services:
     command: triggerer
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: '8fd8f68bd1ba5ee8e90c0fba740a4d13'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -247,6 +255,7 @@ services:
       - ./src:/app/src
       - ./dbt:/app/dbt
       - ./data:/app/data
+      - ./spark/jobs:/app/spark/jobs
     deploy:
       resources:
         limits:
@@ -272,6 +281,7 @@ services:
         exec /entrypoint airflow version
     environment:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__WEBSERVER__SECRET_KEY: '8fd8f68bd1ba5ee8e90c0fba740a4d13'
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
       AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0

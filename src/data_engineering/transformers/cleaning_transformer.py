@@ -1,6 +1,6 @@
 """Data cleaning transformer."""
 
-from typing import Any, List, Optional
+from typing import Any
 
 import pandas as pd
 
@@ -19,12 +19,12 @@ class CleaningTransformer(BaseTransformer):
         name: str = "cleaning",
         *,
         drop_duplicates: bool = True,
-        duplicate_subset: Optional[List[str]] = None,
+        duplicate_subset: list[str] | None = None,
         fill_null_strategy: str = "drop",
         fill_value: Any = None,
         trim_strings: bool = True,
         lowercase_columns: bool = True,
-        rename_map: Optional[dict[str, str]] = None,
+        rename_map: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize cleaning transformer.

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from data_engineering.config import get_settings

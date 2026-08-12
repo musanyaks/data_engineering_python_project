@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from typing import Any
 
 import structlog
 from pythonjsonlogger import jsonlogger
@@ -49,7 +48,7 @@ def configure_logging() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer() if settings.log_format == "json" 
+            structlog.processors.JSONRenderer() if settings.log_format == "json"
             else structlog.dev.ConsoleRenderer(),
         ],
         context_class=dict,

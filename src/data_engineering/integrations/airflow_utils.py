@@ -1,14 +1,14 @@
 """Shared helpers for building Airflow DAG configuration."""
 
 from datetime import datetime, timedelta
-from typing import Any, Optional, Union
+from typing import Any
 
 
 def get_dag_config(
     dag_id: str,
-    schedule: Union[str, timedelta, None] = None,
-    tags: Optional[list] = None,
-    start_date: Optional[datetime] = None,
+    schedule: str | timedelta | None = None,
+    tags: list | None = None,
+    start_date: datetime | None = None,
     retries: int = 2,
     retry_delay: timedelta = timedelta(minutes=5),
     catchup: bool = False,

@@ -1,6 +1,6 @@
 """ETL Pipeline orchestrator."""
 
-from typing import Any, List
+from typing import Any
 
 import pandas as pd
 
@@ -34,9 +34,9 @@ class ETLPipeline:
         self.name = name
         self.config = kwargs
         self.logger = get_logger(f"pipeline.{name}")
-        self._extractors: List[BaseExtractor] = []
-        self._transformers: List[BaseTransformer] = []
-        self._loaders: List[BaseLoader] = []
+        self._extractors: list[BaseExtractor] = []
+        self._transformers: list[BaseTransformer] = []
+        self._loaders: list[BaseLoader] = []
         self._data: pd.DataFrame | None = None
         self.logger.info(f"Initialized pipeline: {name}")
 
@@ -125,7 +125,7 @@ class ETLPipeline:
         if not self._extractors:
             raise PipelineError("No extractors configured")
 
-        dataframes: List[pd.DataFrame] = []
+        dataframes: list[pd.DataFrame] = []
 
         for extractor in self._extractors:
             self.logger.info(f"Extracting with {extractor.name}")

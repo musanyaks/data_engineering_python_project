@@ -1,6 +1,8 @@
 """Spark session management for local development."""
 import os
+
 from pyspark.sql import SparkSession
+
 from data_engineering.logger import get_logger
 
 logger = get_logger("spark.session")
@@ -19,15 +21,18 @@ def get_spark_session(
 ) -> SparkSession:
     """Get or create a Spark session."""
     global _SPARK_SESSION
-    
-    if _SPARK_SESSION is not None and not _SPARK_SESSION.sparkContext._jsc.sc().isStopped():
+
+    if (
+        _SPARK_SESSION is not None
+        and not _SPARK_SESSION.sparkContext._jsc.sc().isStopped()
+    ):
         return _SPARK_SESSION
-    
+
     driver_mem = memory or os.getenv("SPARK_DRIVER_MEMORY", "4g")
     executor_mem = os.getenv("SPARK_EXECUTOR_MEMORY", "4g")
     cores = os.getenv("SPARK_EXECUTOR_CORES", "4")
     partitions = os.getenv("SPARK_SHUFFLE_PARTITIONS", "8")
-    
+
     logger.info(
         "Creating Spark session",
         app_name=app_name,
@@ -38,7 +43,7 @@ def get_spark_session(
         partitions=partitions,
         packages=SNOWFLAKE_PACKAGES,
     )
-    
+
     _SPARK_SESSION = (
         SparkSession.builder
         .appName(app_name)
@@ -62,7 +67,7 @@ def get_spark_session(
         .config("spark.log.level", "WARN")
         .getOrCreate()
     )
-    
+
     sc = _SPARK_SESSION.sparkContext
     logger.info(
         "Spark session created",
@@ -71,7 +76,7 @@ def get_spark_session(
         app_id=sc.applicationId,
         default_parallelism=sc.defaultParallelism,
     )
-    
+
     return _SPARK_SESSION
 
 

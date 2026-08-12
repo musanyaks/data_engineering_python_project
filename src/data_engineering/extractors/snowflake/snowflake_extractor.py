@@ -4,7 +4,6 @@ from typing import Any
 
 import pandas as pd
 import snowflake.connector
-from snowflake.connector.pandas_tools import write_pandas
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from data_engineering.config import get_settings
@@ -77,7 +76,8 @@ class SnowflakeExtractor(BaseExtractor):
         params = {
             "account": self.account or os.getenv("SNOWFLAKE_ACCOUNT"),
             "user": self.user or os.getenv("SNOWFLAKE_USER"),
-            "warehouse": self.warehouse or os.getenv("SNOWFLAKE_WAREHOUSE", "COMPUTE_WH"),
+            "warehouse": self.warehouse
+            or os.getenv("SNOWFLAKE_WAREHOUSE", "COMPUTE_WH"),
             "database": self.database or os.getenv("SNOWFLAKE_DATABASE"),
             "schema": self.schema or os.getenv("SNOWFLAKE_SCHEMA", "PUBLIC"),
             "role": self.role or os.getenv("SNOWFLAKE_ROLE"),

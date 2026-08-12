@@ -3,7 +3,7 @@
 from typing import Any
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lower, trim, when
+from pyspark.sql.functions import col, trim
 
 from data_engineering.logger import get_logger
 

@@ -1,7 +1,6 @@
 """Configuration management using Pydantic Settings."""
 
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field, PostgresDsn, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +17,9 @@ class Settings(BaseSettings):
     )
 
     # Application
-    environment: str = Field(default="development", description="Deployment environment")
+    environment: str = Field(
+        default="development", description="Deployment environment"
+    )
     debug: bool = Field(default=False, description="Debug mode")
 
     # Database
@@ -30,7 +31,9 @@ class Settings(BaseSettings):
     database_max_overflow: int = Field(default=20, ge=0)
 
     # Logging
-    log_level: str = Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
+    log_level: str = Field(
+        default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$"
+    )
     log_format: str = Field(default="json", pattern=r"^(json|text)$")
 
     # Pipeline
@@ -40,9 +43,9 @@ class Settings(BaseSettings):
     retry_backoff: float = Field(default=2.0, ge=1.0)
 
     # API
-    api_base_url: Optional[str] = Field(default=None)
+    api_base_url: str | None = Field(default=None)
     api_timeout: int = Field(default=30, ge=1)
-    api_key: Optional[str] = Field(default=None)
+    api_key: str | None = Field(default=None)
 
     @validator("database_url", pre=True)
     @classmethod

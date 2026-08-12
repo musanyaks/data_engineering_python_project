@@ -1,6 +1,5 @@
 """PySpark-based data loaders."""
 
-from typing import Any
 
 from pyspark.sql import DataFrame
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -62,7 +61,9 @@ class SparkPostgresLoader:
         url_user, url_password = creds_match.groups() if creds_match else (None, None)
         self.jdbc_url = re.sub(r"://[^@/]+@", "://", raw_url)
         self.user = user or url_user or os.getenv("POSTGRES_USER", "postgres")
-        self.password = password or url_password or os.getenv("POSTGRES_PASSWORD", "postgres")
+        self.password = password or url_password or os.getenv(
+            "POSTGRES_PASSWORD", "postgres"
+        )
 
     @retry(
         stop=stop_after_attempt(get_settings().max_retries),

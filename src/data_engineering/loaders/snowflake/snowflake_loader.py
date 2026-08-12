@@ -80,13 +80,15 @@ class SnowflakeLoader(BaseLoader):
     def _get_connection_params(self) -> dict[str, Any]:
         """Build connection parameters."""
         import os
+
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
 
         params = {
             "account": self.account or os.getenv("SNOWFLAKE_ACCOUNT"),
             "user": self.user or os.getenv("SNOWFLAKE_USER"),
-            "warehouse": self.warehouse or os.getenv("SNOWFLAKE_WAREHOUSE", "COMPUTE_WH"),
+            "warehouse": self.warehouse
+            or os.getenv("SNOWFLAKE_WAREHOUSE", "COMPUTE_WH"),
             "database": self.database or os.getenv("SNOWFLAKE_DATABASE"),
             "schema": self.schema,
             "role": self.role or os.getenv("SNOWFLAKE_ROLE"),
@@ -154,7 +156,8 @@ class SnowflakeLoader(BaseLoader):
                 if self.if_exists == "replace":
                     cursor = conn.cursor()
                     cursor.execute(f"""
-                        DROP TABLE IF EXISTS {self.database.upper()}.{self.schema.upper()}.{self.table_name.upper()}
+                        DROP TABLE IF EXISTS
+                        {self.database.upper()}.{self.schema.upper()}.{self.table_name.upper()}
                     """)
                     cursor.close()
 

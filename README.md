@@ -257,19 +257,30 @@ Includes:
 
 ---
 
-## What This Shows Recruiters
+## Engineering Competencies
 
-| Skill | Evidence |
-|-------|----------|
-| **Data Pipeline Architecture** | Built a 3-DAG Airflow system with task dependencies and retry logic |
-| **Distributed Computing** | Implemented PySpark jobs with configurable local/cluster modes |
-| **Data Modeling** | Designed staging → intermediate → mart models in dbt with incremental loads |
-| **Data Quality** | Added custom validators, dbt tests, and null-check gates |
-| **Cloud Data Warehouses** | Integrated Snowflake with password and key-pair authentication |
-| **Containerization** | Docker Compose setup with memory limits and health checks |
-| **Production Mindset** | Structured logging, retry logic, environment-based config, CI/CD |
-| **Performance Tuning** | Optimized Spark for constrained hardware without sacrificing functionality |
-| **Python Engineering** | Modular OOP design, abstract base classes, context managers, type hints |
+This project reflects how I approach data infrastructure — with an emphasis on reliability, observability, and pragmatic trade-offs.
+
+**Pipeline Orchestration**
+Designed and productionized a multi-DAG Airflow system using CeleryExecutor, with task dependency graphs, cross-task communication via XCom, and automatic retry policies with exponential backoff. The system runs both scheduled and manual triggers with full execution history.
+
+**Distributed Data Processing**
+Architected a dual-mode processing layer: Pandas for rapid iteration on smaller datasets, PySpark for horizontal scaling when data grows. Spark jobs are containerized and configurable across local and cluster deployments, with memory tuning and AQE enabled for efficient query planning.
+
+**Analytics Engineering (dbt)**
+Modeled data using the medallion architecture — staging views for source isolation, intermediate tables for business logic and enrichment, and incremental marts for downstream consumption. Implemented SCD snapshots, custom macros, and comprehensive test coverage including uniqueness, referential integrity, and business-rule validations.
+
+**Data Quality & Observability**
+Built data quality gates at multiple layers: runtime null-check validators in Python, dbt schema and custom SQL tests, and structured JSON logging via structlog for traceability. Every pipeline run leaves an audit trail.
+
+**Cloud & Security**
+Integrated Snowflake as both a source and destination, supporting password and key-pair authentication with environment-based credential management. No secrets are hardcoded; all connections are configurable via env vars or constructor injection.
+
+**Infrastructure & DevOps**
+Containerized the full stack with Docker Compose, including resource limits tuned for 16GB RAM. Set up CI/CD with GitHub Actions, pre-commit hooks for linting and formatting, and a Makefile for one-command local development.
+
+**Python Software Engineering**
+Wrote production-grade Python with abstract base classes, context managers, generic type hints, and composable pipeline builders. The codebase is modular, testable, and extensible — new extractors or loaders can be added without touching existing logic.
 
 ---
 

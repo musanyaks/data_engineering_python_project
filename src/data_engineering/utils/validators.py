@@ -1,6 +1,5 @@
 """Data validation utilities."""
 
-from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ValidationError

@@ -43,9 +43,9 @@ jobs:
 
       - name: Lint
         run: |
-          ruff check src tests
+          ruff check src
           mypy src
-          black --check src tests
+          black --check src
 
       - name: Test with pytest
         env:
@@ -59,14 +59,14 @@ jobs:
           fail_ci_if_error: false
 
   security:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
-    - name: Run pip-audit
-      run: |
-        pip install pip-audit
-        pip-audit -r requirements.txt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt

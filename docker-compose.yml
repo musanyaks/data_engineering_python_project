@@ -115,6 +115,7 @@ services:
       SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
       SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
       SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/plugins:/opt/airflow/plugins
@@ -165,6 +166,7 @@ services:
       SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
       SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
       SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/plugins:/opt/airflow/plugins
@@ -213,6 +215,7 @@ services:
       SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
       SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
       SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/plugins:/opt/airflow/plugins
@@ -311,6 +314,7 @@ services:
       SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
       SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
       SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+      DATABASE_URL: ${DATABASE_URL}
     volumes:
       - ./dbt:/app/dbt
       - ./data:/app/data

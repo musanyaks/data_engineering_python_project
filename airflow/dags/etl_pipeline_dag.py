@@ -177,12 +177,13 @@ with DAG(
             .extract(
                 SnowflakeExtractor(
                     name="transformed_data",
-                    query="SELECT * FROM analytics.fct_sales",
+                    query="SELECT * FROM analytics.marts.fct_sales",
                 )
             )
             .load(
                 SnowflakeLoader(
                     name="sf_mart",
+                    database="ANALYTICS",
                     table_name="fct_sales",
                     schema="marts",
                     if_exists="replace",

@@ -1,295 +1,228 @@
-# Data Engineering Pipeline
+# End-to-End Data Engineering Pipeline
 
-Production-ready Python framework for ETL/ELT data pipelines with **Apache Airflow**, **dbt**, **Snowflake**, and **Apache Spark**.
+> Production-grade ETL/ELT system built with **Apache Airflow**, **Apache Spark**, **dbt**, and **Snowflake** — designed, tested, and optimized to run on a standard 16GB RAM laptop.
 
-## Hardware Requirements
+---
 
-This project is **optimized for 16GB RAM / 100GB SSD laptops**.
+## What This Project Does
 
-| Service | Memory | Cores | Notes |
-|---------|--------|-------|-------|
-| Spark Driver | 4GB | - | Job coordination |
-| Spark Executor | 4GB | 4 | Data processing |
-| Airflow (all) | ~4GB | - | Webserver + Scheduler + Worker |
-| PostgreSQL | 1GB | - | Metadata + staging |
-| Redis | 512MB | - | Celery broker |
-| OS + Buffer | ~2.5GB | - | Headroom for OS |
-| **Total** | **~16GB** | **4+** | Comfortable fit |
+This is a **complete data platform** that ingests raw sales, customer, and product data from multiple sources, cleans and transforms it, and delivers analytics-ready datasets for business reporting.
 
-## Quick Start
+**Business outcome:** Stakeholders get reliable, up-to-date answers to questions like:
+- What is our daily revenue by country and product category?
+- Which customer segments are active, at-risk, or churned?
+- What is the profit margin on every sale?
 
-### Option 1: Local Python (No Docker) - Lightest
+---
 
-Best for development and testing individual components.
+## The Problem It Solves
 
-```bash
-# Install everything
-make install-dev
+Most data engineering tutorials stop at "hello world." This project solves the **real-world challenge** of building a pipeline that:
 
-# Run a Spark job locally (uses 4GB RAM)
-python -m spark.jobs.process_sales
+1. **Connects to live data sources** — CSV exports from POS systems, Snowflake data warehouses, and REST APIs
+2. **Handles data quality** — null checks, uniqueness constraints, schema validation
+3. **Scales with data size** — switches between Pandas (small data) and PySpark (large data) without rewriting logic
+4. **Runs on modest hardware** — the entire stack (Airflow + Spark + PostgreSQL + Redis) fits comfortably on a 16GB laptop
+5. **Recovers from failure** — automatic retries with exponential backoff, structured logging, and monitoring
 
-# Run tests
-make test
+---
+
+## Architecture & Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Orchestration** | Apache Airflow (CeleryExecutor) | Schedules and monitors pipeline runs hourly |
+| **Distributed Processing** | Apache Spark (local + Docker cluster) | Handles medium-to-large datasets (1–50GB) |
+| **Transformations** | dbt (data build tool) | SQL-based staging → intermediate → mart models |
+| **Data Warehouse** | Snowflake | Cloud source and destination for analytics |
+| **Staging Database** | PostgreSQL | Local landing zone for raw and transformed data |
+| **Message Broker** | Redis | Celery task queue for Airflow workers |
+| **Containerization** | Docker Compose | Reproducible environment with resource limits |
+| **Code Quality** | pre-commit, pytest, GitHub Actions | CI/CD with unit, integration, and Spark tests |
+
+---
+
+## Key Features Demonstrated
+
+### Multi-Source Data Ingestion
+- **CSV Extractor** — Reads and validates local sales transaction files
+- **Snowflake Extractor** — Connects via password or key-pair authentication, pulls incremental event data
+- **API Extractor** — Fetches data from REST endpoints with retry logic and timeout handling
+
+### Intelligent Processing Engine
+- **Auto-scaling**: Pandas for <1GB datasets, PySpark for 1–50GB datasets
+- **Spark tuning**: 4GB driver, 4GB executor, 8 shuffle partitions — optimized for laptop hardware
+- **Data cleaning**: Deduplication, null handling, string normalization, type casting
+
+### dbt Data Modeling (Medallion Architecture)
+```
+raw data
+    ↓
+staging (views)       — stg_sales, stg_customers, stg_products
+    ↓
+intermediate (tables) — int_sales_enriched (joins + calculated fields)
+    ↓
+marts (tables)        — fct_sales, dim_customers, dim_products, fct_daily_revenue
 ```
 
-### Option 2: Docker Spark Only - Medium
+**Analytics outputs:**
+- `fct_sales` — Incremental fact table with profit per transaction
+- `dim_customers` — Customer dimension with lifetime value, order count, and churn segmentation (Active / At Risk / Churned / Never Purchased)
+- `fct_daily_revenue` — Daily aggregations by country and category
 
-Best for testing Spark cluster behavior.
+### Production Reliability
+- **Data quality gates** — Custom validators + dbt tests (uniqueness, not-null, positive revenue)
+- **Retry logic** — Exponential backoff via `tenacity`
+- **Structured logging** — JSON logs via `structlog` for observability
+- **Snapshots** — Slowly Changing Dimensions (SCD) for customer and product history
 
-```bash
-# Start Spark master + worker (~8GB RAM)
-make spark-up
+---
 
-# Submit jobs
-make spark-submit JOB=spark/jobs/process_sales.py
+## Pipeline Orchestration (Airflow DAGs)
 
-# Open PySpark shell
-make spark-shell
+### 1. `etl_master_pipeline` — Pandas-Based ETL
+Runs every hour:
+1. Extract CSV sources → PostgreSQL staging
+2. Extract Snowflake data → PostgreSQL staging
+3. Run data quality checks
+4. Execute dbt models
+5. Run dbt tests
+6. Load results to Snowflake marts
 
-# Check status
-make spark-status
+![etl_master_pipeline Airflow UI](assets/etl_master_pipeline.jpg)
+*Airflow Grid view showing 25+ DAG runs with task-level success/failure tracking*
 
-# Monitor resources
-make resource-check
-```
+### 2. `spark_etl_pipeline` — Spark-Based ETL
+Runs every hour for larger datasets:
+1. Validate input files
+2. Submit Spark job: CSV → PostgreSQL
+3. Submit Spark job: Snowflake → PostgreSQL
+4. Run dbt models
+5. Run dbt tests
 
-### Option 3: Full Stack - Heavy
+![spark_etl_pipeline Airflow Graph](assets/SPARK%20ETL(1).jpg)
+*Airflow Graph view showing the full Spark ETL DAG with all 5 tasks completing successfully*
 
-Best for end-to-end integration testing.
+### 3. `dbt_daily_transformations` — Daily Batch
+1. Install dbt dependencies
+2. Load seed data (e.g., country codes)
+3. Run all models
+4. Execute tests
+5. Generate documentation
+6. Run snapshots
 
-```bash
-# Start everything: Airflow + Spark + PostgreSQL + Redis (~12-14GB RAM)
-make up
+### Live Monitoring
+Track pipeline health from the command line or Airflow UI:
 
-# Access services:
-# Airflow UI:  http://localhost:8080  (airflow/airflow)
-# Spark UI:    http://localhost:8081
-# pgAdmin:     http://localhost:5050  (admin@example.com/admin)
+![CLI DAG runs](assets/master_pipeline_2(1).jpg)
+*Terminal output showing `airflow dags list-runs` for `etl_master_pipeline` — verifying execution state, start/end times, and run IDs*
 
-# Monitor Docker resource usage
-make resource-check
-
-# Stop everything
-make down
-```
+---
 
 ## Project Structure
 
 ```
 ├── airflow/
 │   ├── dags/
-│   │   ├── etl_pipeline_dag.py      # Pandas-based ETL
-│   │   ├── spark_etl_dag.py         # Spark-based ETL
-│   │   └── dbt_daily_dag.py         # Daily dbt run
+│   │   ├── etl_pipeline_dag.py      # Pandas-based ETL orchestration
+│   │   ├── spark_etl_dag.py         # Spark-based ETL orchestration
+│   │   └── dbt_daily_dag.py         # Daily dbt batch job
 │   ├── plugins/
 │   └── config/
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/                 # Staging models (views)
-│   │   ├── intermediate/            # Intermediate transformations
-│   │   └── marts/                   # Business logic models
-│   ├── tests/                       # Custom data tests
+│   │   ├── staging/                 # Cleaned source views
+│   │   ├── intermediate/            # Joined and enriched tables
+│   │   └── marts/                   # Business-ready fact & dimension tables
+│   ├── tests/                       # Custom SQL data quality tests
 │   ├── macros/                      # Reusable SQL macros
-│   ├── snapshots/                   # Slowly changing dimensions
-│   ├── seeds/                       # Static CSV data
-│   ├── dbt_project.yml
-│   └── profiles.yml
+│   ├── snapshots/                   # SCD Type 2 tracking
+│   └── seeds/                       # Static reference data
 ├── spark/
-│   ├── jobs/                        # PySpark job scripts
-│   │   ├── process_sales.py         # CSV → PostgreSQL
-│   │   └── snowflake_to_postgres.py # Snowflake → PostgreSQL
-│   └── config/                      # Spark configuration
-│       ├── spark-defaults.conf      # 16GB-optimized settings
-│       └── log4j.properties         # Reduced log noise
+│   ├── jobs/                        # PySpark scripts for production runs
+│   └── config/                      # Spark defaults tuned for 16GB RAM
 ├── src/data_engineering/
-│   ├── extractors/
-│   │   ├── csv_extractor.py         # Pandas CSV
-│   │   ├── api_extractor.py         # Pandas API
-│   │   └── snowflake/
-│   │       └── snowflake_extractor.py
-│   ├── transformers/
-│   │   └── cleaning_transformer.py  # Pandas
-│   ├── loaders/
-│   │   ├── postgres_loader.py       # Pandas
-│   │   └── snowflake/
-│   │       └── snowflake_loader.py
-│   ├── spark/                       # PySpark components
-│   │   ├── spark_session.py         # Spark session manager
-│   │   ├── extractors.py            # Spark CSV/Snowflake
-│   │   ├── transformers.py          # Spark cleaning
-│   │   └── loaders.py               # Spark PostgreSQL/Snowflake
-│   ├── pipelines/
-│   │   └── etl_pipeline.py          # Pandas pipeline
-│   ├── integrations/
-│   │   ├── dbt_runner.py            # Programmatic dbt
-│   │   └── airflow_utils.py         # Airflow helpers
-│   └── utils/
-│       └── validators.py
+│   ├── extractors/                  # CSV, API, Snowflake extractors
+│   ├── transformers/                # Cleaning and normalization
+│   ├── loaders/                     # PostgreSQL and Snowflake loaders
+│   ├── spark/                       # PySpark extractors, transformers, loaders
+│   ├── pipelines/                   # Composable ETL pipeline builder
+│   ├── integrations/                # dbt runner, Airflow utilities
+│   └── utils/                       # Data validators
 ├── tests/
-│   ├── unit/
-│   └── integration/
-├── scripts/
-│   ├── run_pipeline.py
-│   └── dbt/
-│       └── run_dbt.py
-├── docker-compose.yml               # 16GB RAM resource limits
-├── Dockerfile.airflow
-├── Dockerfile.dbt
-├── Dockerfile.spark
-├── Makefile                         # Resource-aware commands
-├── pyproject.toml
-└── README.md
+│   ├── unit/                        # Component-level tests
+│   └── integration/                 # End-to-end pipeline tests
+├── docker-compose.yml               # Full stack with resource limits
+├── Makefile                         # One-command operations
+└── pyproject.toml                   # Python dependencies & tooling
 ```
 
-## Spark Usage
+---
 
-### Local Mode (Single Machine)
+## Running the Project
 
-```python
-from data_engineering.spark.spark_session import get_spark_session
-from data_engineering.spark.extractors import SparkCSVExtractor
-from data_engineering.spark.transformers import SparkCleaningTransformer
-from data_engineering.spark.loaders import SparkPostgresLoader
-
-# Uses 4GB driver, all CPU cores, 8 shuffle partitions
-spark = get_spark_session("my_job")
-
-# For bigger jobs, increase memory:
-spark = get_spark_session("big_job", memory="6g")
-
-# Extract
-df = SparkCSVExtractor("sales", "data/sales.csv").extract()
-
-# Transform
-clean_df = SparkCleaningTransformer("clean").transform(df)
-
-# Load
-SparkPostgresLoader("pg", table_name="staging_sales").load(clean_df)
-```
-
-### Docker Cluster Mode
-
+### Option 1: Local Python (Lightest — ~4GB RAM)
 ```bash
-# Spark master + worker run in containers
-# Submit jobs via Airflow or directly:
+# Install dependencies
+make install-dev
 
-make spark-submit JOB=spark/jobs/process_sales.py
-```
-
-### Spark Configuration for 16GB RAM
-
-| Setting | Value | Reason |
-|---------|-------|--------|
-| Driver Memory | 4GB | Enough for aggregations and UI |
-| Executor Memory | 4GB | Parallel processing without OOM |
-| Executor Cores | 4 | Matches typical laptop CPUs |
-| Shuffle Partitions | 8 | Reduces small-file overhead |
-| AQE | Enabled | Auto-optimizes joins at runtime |
-| Local Dir | /tmp/spark-temp | Uses fast SSD for spills |
-
-### Tuning for Your Data Size
-
-**Small data (< 1GB):**
-```bash
-# Use pandas instead - faster startup, less overhead
-python -m scripts.run_pipeline
-```
-
-**Medium data (1-10GB):**
-```bash
-# Default Spark settings work well
+# Run a Spark job locally
 python -m spark.jobs.process_sales
+
+# Run tests
+make test
 ```
 
-**Large data (10-50GB):**
+### Option 2: Docker Spark Only (Medium — ~8GB RAM)
 ```bash
-# Increase memory, use Docker cluster
-export SPARK_DRIVER_MEMORY=6g
-export SPARK_EXECUTOR_MEMORY=6g
+# Start Spark master + worker
 make spark-up
+
+# Submit a job
 make spark-submit JOB=spark/jobs/process_sales.py
+
+# Open PySpark shell
+make spark-shell
 ```
 
-## dbt Models
+### Option 3: Full Stack (Heavy — ~12–14GB RAM)
+```bash
+# Start everything: Airflow + Spark + PostgreSQL + Redis
+make up
 
-### Staging Layer
-- `stg_sales` - Cleaned sales transactions
-- `stg_customers` - Standardized customer data
-- `stg_products` - Product catalog
+# Access services:
+# Airflow UI:  http://localhost:8080
+# Spark UI:    http://localhost:8081
+# pgAdmin:     http://localhost:5050
 
-### Intermediate Layer
-- `int_sales_enriched` - Sales joined with customers and products
-
-### Marts Layer
-- `fct_sales` - Incremental fact table
-- `dim_customers` - Customer dimension with metrics
-- `dim_products` - Product dimension with sales stats
-- `fct_daily_revenue` - Daily aggregated revenue
-
-## Snowflake Integration
-
-### Authentication
-Supports both password and key-pair authentication:
-
-```python
-# Password auth
-extractor = SnowflakeExtractor(
-    name="sf_query",
-    query="SELECT * FROM raw_events",
-    account="xy12345.us-east-1",
-    user="myuser",
-    password="mypassword",
-)
-
-# Key-pair auth
-extractor = SnowflakeExtractor(
-    name="sf_query",
-    query="SELECT * FROM raw_events",
-    private_key_path="/path/to/key.p8",
-)
+# Stop everything
+make down
 ```
 
-### Environment Variables
-All Snowflake connection parameters can be set via environment variables:
-- `SNOWFLAKE_ACCOUNT`
-- `SNOWFLAKE_USER`
-- `SNOWFLAKE_PASSWORD`
-- `SNOWFLAKE_PRIVATE_KEY_PATH`
-- `SNOWFLAKE_ROLE`
-- `SNOWFLAKE_DATABASE`
-- `SNOWFLAKE_WAREHOUSE`
-- `SNOWFLAKE_SCHEMA`
+---
 
-## Airflow DAGs
+## Hardware Optimization
 
-### `etl_master_pipeline`
-Hourly pipeline using **pandas** for smaller datasets:
-1. Extracts CSV data to PostgreSQL staging
-2. Extracts Snowflake data to staging
-3. Runs data quality checks
-4. Executes dbt models
-5. Runs dbt tests
-6. Loads results to Snowflake marts
+This project is intentionally tuned for **16GB RAM / 100GB SSD laptops**:
 
-### `spark_etl_pipeline`
-Hourly pipeline using **Spark** for larger datasets:
-1. Validates input files
-2. Submits Spark job: CSV → PostgreSQL
-3. Submits Spark job: Snowflake → PostgreSQL
-4. Runs dbt models
-5. Runs dbt tests
+| Service | Memory | Purpose |
+|---------|--------|---------|
+| Spark Driver | 4GB | Job coordination |
+| Spark Executor | 4GB | Parallel data processing |
+| Airflow (all) | ~4GB | Webserver + Scheduler + Worker |
+| PostgreSQL | 1GB | Metadata + staging data |
+| Redis | 512MB | Celery broker |
+| OS + Buffer | ~2.5GB | System headroom |
+| **Total** | **~16GB** | Comfortable fit |
 
-### `dbt_daily_transformations`
-Daily batch job:
-1. Installs dbt dependencies
-2. Loads seeds
-3. Runs all models
-4. Executes tests
-5. Generates documentation
-6. Runs snapshots
+**Spark tuning highlights:**
+- Adaptive Query Execution (AQE) enabled for runtime optimization
+- Shuffle partitions set to 8 (reduces small-file overhead)
+- Local temp directory on SSD for spill-to-disk
 
-## Testing
+---
+
+## Testing Strategy
 
 ```bash
 # Unit tests only
@@ -308,65 +241,38 @@ pytest -m snowflake
 pytest
 ```
 
-## Key Production Features
+Includes:
+- **Unit tests** for extractors, transformers, and loaders
+- **Integration tests** for end-to-end pipeline execution
+- **dbt tests** for schema constraints and business logic
+- **Data quality checks** for null thresholds and value ranges
 
-| Feature | Implementation |
-|---------|---------------|
-| **Orchestration** | Apache Airflow with CeleryExecutor |
-| **Distributed Processing** | Apache Spark (local or cluster) |
-| **Transformations** | dbt with incremental models |
-| **Data Warehouse** | Snowflake with connection pooling |
-| **Authentication** | Password or key-pair auth |
-| **Logging** | Structured JSON logs via structlog |
-| **Retries** | Exponential backoff with tenacity |
-| **Testing** | pytest + dbt tests + data quality checks |
-| **CI/CD** | GitHub Actions with matrix testing |
-| **Containerization** | Docker Compose with resource limits |
-| **Laptop Optimized** | 16GB RAM tuned, 4GB Spark heaps |
+---
 
-## Makefile Commands
+## CI/CD
 
-| Command | Description | RAM Usage |
-|---------|-------------|-----------|
-| `make up` | Start all services | ~12-14GB |
-| `make down` | Stop all services | - |
-| `make spark-up` | Start Spark only | ~8GB |
-| `make spark-submit JOB=...` | Submit Spark job | +0GB |
-| `make spark-shell` | PySpark shell | +0GB |
-| `make airflow-up` | Start Airflow only | ~4GB |
-| `make dbt-run` | Run dbt models | Minimal |
-| `make test` | Run Python tests | ~1GB |
-| `make resource-check` | Show Docker usage | - |
+- **GitHub Actions** workflow runs the full test matrix on every push
+- **pre-commit hooks** enforce code formatting, linting, and type checking
+- **Docker images** built and tagged for reproducible deployments
 
-## Troubleshooting
+---
 
-### Out of Memory Errors
+## What This Shows Recruiters
 
-If Spark fails with OOM:
-```bash
-# Reduce Spark memory
-export SPARK_DRIVER_MEMORY=2g
-export SPARK_EXECUTOR_MEMORY=2g
+| Skill | Evidence |
+|-------|----------|
+| **Data Pipeline Architecture** | Built a 3-DAG Airflow system with task dependencies and retry logic |
+| **Distributed Computing** | Implemented PySpark jobs with configurable local/cluster modes |
+| **Data Modeling** | Designed staging → intermediate → mart models in dbt with incremental loads |
+| **Data Quality** | Added custom validators, dbt tests, and null-check gates |
+| **Cloud Data Warehouses** | Integrated Snowflake with password and key-pair authentication |
+| **Containerization** | Docker Compose setup with memory limits and health checks |
+| **Production Mindset** | Structured logging, retry logic, environment-based config, CI/CD |
+| **Performance Tuning** | Optimized Spark for constrained hardware without sacrificing functionality |
+| **Python Engineering** | Modular OOP design, abstract base classes, context managers, type hints |
 
-# Or use pandas for smaller datasets
-python -m scripts.run_pipeline
-```
+---
 
-### Docker Disk Space (100GB SSD)
+## Tech Keywords
 
-If running low on disk:
-```bash
-# Clean up Docker
-make clean
-docker system prune -a
-
-# Check Spark temp files
-rm -rf /tmp/spark-temp/*
-```
-
-### Slow Performance
-
-1. **Check partitions**: Too many = overhead, too few = not parallel
-2. **Use AQE**: Already enabled, but verify `spark.sql.adaptive.enabled=true`
-3. **SSD for spills**: Already configured to use `/tmp/spark-temp`
-4. **Reduce shuffle**: Use `.coalesce()` instead of `.repartition()` when reducing
+`Apache Airflow` · `Apache Spark` · `PySpark` · `dbt` · `Snowflake` · `PostgreSQL` · `Redis` · `Docker` · `Docker Compose` · `Python` · `Pandas` · `SQL` · `ETL` · `ELT` · `Data Modeling` · `Data Quality` · `CI/CD` · `GitHub Actions`

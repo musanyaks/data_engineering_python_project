@@ -75,7 +75,7 @@ airflow-init:
 
 airflow-up:
 	docker-compose up -d postgres redis airflow-webserver airflow-scheduler airflow-worker airflow-triggerer
-	@echo "Airflow UI: http://localhost:8080 (airflow/airflow)"
+	@echo "Airflow UI: http://localhost:8090 (airflow/airflow)"
 
 airflow-down:
 	docker-compose stop airflow-webserver airflow-scheduler airflow-worker airflow-triggerer
@@ -130,7 +130,7 @@ up:
 	docker-compose up -d airflow-webserver airflow-scheduler airflow-worker airflow-triggerer
 	@echo ""
 	@echo "All services started!"
-	@echo "Airflow UI:  http://localhost:8080"
+	@echo "Airflow UI:  http://localhost:8090"
 	@echo "Spark UI:    http://localhost:8082"
 	@echo "pgAdmin:     http://localhost:5050"
 	@echo ""

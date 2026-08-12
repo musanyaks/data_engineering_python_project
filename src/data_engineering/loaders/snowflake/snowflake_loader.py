@@ -154,7 +154,7 @@ class SnowflakeLoader(BaseLoader):
                 if self.if_exists == "replace":
                     cursor = conn.cursor()
                     cursor.execute(f"""
-                        DROP TABLE IF EXISTS {self.database}.{self.schema}.{self.table_name}
+                        DROP TABLE IF EXISTS {self.database.upper()}.{self.schema.upper()}.{self.table_name.upper()}
                     """)
                     cursor.close()
 
@@ -162,9 +162,9 @@ class SnowflakeLoader(BaseLoader):
                 success, num_chunks, num_rows, output = write_pandas(
                     conn=conn,
                     df=df,
-                    table_name=self.table_name,
-                    database=self.database,
-                    schema=self.schema,
+                    table_name=self.table_name.upper(),
+                    database=self.database.upper() if self.database else self.database,
+                    schema=self.schema.upper() if self.schema else self.schema,
                     overwrite=(self.if_exists == "replace"),
                     chunk_size=self.batch_size,
                 )

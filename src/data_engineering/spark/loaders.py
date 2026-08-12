@@ -49,11 +49,20 @@ class SparkPostgresLoader:
         self.logger = get_logger(f"spark.loader.postgres.{name}")
 
         import os
-        self.jdbc_url = jdbc_url or os.getenv(
-            "DATABASE_URL", "jdbc:postgresql://localhost:5432/dbname"
-        ).replace("postgresql://", "jdbc:postgresql://")
-        self.user = user or os.getenv("POSTGRES_USER", "postgres")
-        self.password = password or os.getenv("POSTGRES_PASSWORD", "postgres")
+        raw_url = jdbc_url or os.getenv(
+            "DATABASE_URL", "jdbc:postgresql://postgres:5432/airflow"
+        )
+        if not raw_url.startswith("jdbc:"):
+            raw_url = f"jdbc:{raw_url}"
+        # Spark JDBC does not support embedded user:pass@ credentials in the URL;
+        # extract them (if present) to use as connection properties, then strip
+        # them from the URL itself.
+        import re
+        creds_match = re.search(r"://([^:@/]+):([^@/]+)@", raw_url)
+        url_user, url_password = creds_match.groups() if creds_match else (None, None)
+        self.jdbc_url = re.sub(r"://[^@/]+@", "://", raw_url)
+        self.user = user or url_user or os.getenv("POSTGRES_USER", "postgres")
+        self.password = password or url_password or os.getenv("POSTGRES_PASSWORD", "postgres")
 
     @retry(
         stop=stop_after_attempt(get_settings().max_retries),

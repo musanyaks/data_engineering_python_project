@@ -74,7 +74,7 @@ with DAG(**config) as dag:
     # Task 4: Run dbt models after Spark processing
     run_dbt = BashOperator(
         task_id="run_dbt_models",
-        bash_command="cd /app/dbt && dbt run --profiles-dir . --target dev",
+        bash_command="cd /app/dbt && dbt deps --profiles-dir . && dbt run --profiles-dir . --target dev",
     )
 
     # Task 5: Run dbt tests
